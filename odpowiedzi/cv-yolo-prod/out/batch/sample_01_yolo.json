@@ -1,0 +1,32 @@
+{
+  "image": "..\\..\\computer-vision\\data\\images\\sample_01.jpg",
+  "model": "yolov8n.pt",
+  "conf_threshold": 0.5,
+  "detections": [
+    {
+      "label": "dog",
+      "confidence": 0.932983934879303,
+      "box_xyxy": [
+        325,
+        93,
+        815,
+        522
+      ]
+    },
+    {
+      "label": "potted plant",
+      "confidence": 0.8843393921852112,
+      "box_xyxy": [
+        177,
+        0,
+        321,
+        258
+      ]
+    }
+  ],
+  "stats": {
+    "detections_count": 2,
+    "avg_conf": 0.9086616635322571,
+    "latency_ms": 59.87230000027921
+  }
+}

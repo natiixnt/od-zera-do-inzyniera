@@ -1,0 +1,2 @@
+image,detections_count,avg_conf,latency_ms
+..\..\computer-vision\data\images\sample_01.jpg,2,0.908662,59.872
