@@ -41,11 +41,13 @@ def main():
     if not in_dir.exists():
         raise ValueError(f"dir does not exist: {in_dir}")
 
+    # out/batch jako domysl, zeby nie mieszac z pojedynczym runem
     out_dir = Path(args.out_dir) if args.out_dir else Path(s.out_dir) / "batch"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     det = YoloDetector(model_name=model_name)
 
+    # bierzemy wszystkie obrazy rekursywnie (rglob)
     images = [p for p in sorted(in_dir.rglob("*")) if p.is_file() and is_image(p)]
     if args.limit and args.limit > 0:
         images = images[: args.limit]
@@ -56,30 +58,37 @@ def main():
         if image_bgr is None:
             continue
 
+        # inference + latency
         t0 = time.perf_counter()
         dets = det.predict(image_bgr, conf_threshold=conf)
         t1 = time.perf_counter()
 
-        # metryki proste ale uzyteczne
+        # proste metryki per obraz
         cnt = len(dets)
         avg_conf = sum(d.confidence for d in dets) / cnt if cnt > 0 else 0.0
         latency_ms = (t1 - t0) * 1000.0
 
+        # zapis wizualizacji
         vis = draw_detections(image_bgr.copy(), dets)
-
         png_out = out_dir / f"{p.stem}_yolo.png"
-        json_out = out_dir / f"{p.stem}_yolo.json"
         cv2.imwrite(str(png_out), vis)
 
+        # zapis JSON - pelne detale detekcji
+        json_out = out_dir / f"{p.stem}_yolo.json"
         payload = {
             "image": str(p),
             "model": model_name,
             "conf_threshold": float(conf),
             "detections": [det_to_dict(d) for d in dets],
-            "stats": {"detections_count": cnt, "avg_conf": avg_conf, "latency_ms": latency_ms},
+            "stats": {
+                "detections_count": cnt,
+                "avg_conf": avg_conf,
+                "latency_ms": latency_ms,
+            },
         }
         json_out.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
+        # wiersz do CSV: to jest baza pod monitoring bez etykiet
         rows.append(
             {
                 "image": str(p),
@@ -91,6 +100,7 @@ def main():
 
         print(f"[INFO] {p.name}: det={cnt} avg_conf={avg_conf:.3f} latency_ms={latency_ms:.2f}")
 
+    # metrics.csv - szybki przeglad wszystkiego
     csv_path = out_dir / "metrics.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["image", "detections_count", "avg_conf", "latency_ms"])

@@ -8,10 +8,17 @@ import numpy as np
 from cv_yolo.predict import Detection
 
 
+# Wizualizacja jest krytyczna w CV.
+# Bez niej latwo uwierzyc w zle wyniki, bo liczby wygladaja okej.
+# PNG z boxami to najszybszy debug tool jaki masz.
 def draw_detections(image_bgr: np.ndarray, dets: List[Detection]) -> np.ndarray:
     for d in dets:
         x1, y1, x2, y2 = d.box
+
+        # Prostokat detekcji
         cv2.rectangle(image_bgr, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+        # Etykieta + confidence nad boxem
         cv2.putText(
             image_bgr,
             f"{d.label} {d.confidence:.2f}",
@@ -22,4 +29,5 @@ def draw_detections(image_bgr: np.ndarray, dets: List[Detection]) -> np.ndarray:
             1,
             cv2.LINE_AA,
         )
+
     return image_bgr
